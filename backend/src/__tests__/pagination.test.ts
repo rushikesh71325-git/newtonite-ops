@@ -9,7 +9,7 @@ import {
   SeededTestContext,
 } from "./testHelper";
 
-describe("Phase 7: Cursor Pagination & Concurrent Inserts (Plan Section 11)", () => {
+describe("Phase 7: Cursor Pagination & Concurrent Inserts", () => {
   let ctx: SeededTestContext;
 
   beforeAll(async () => {

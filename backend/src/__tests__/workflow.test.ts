@@ -9,7 +9,7 @@ import {
   SeededTestContext,
 } from "./testHelper";
 
-describe("Phase 7: Workflow Rules & Approval Separation (Plan Section 11)", () => {
+describe("Phase 7: Workflow Rules & Approval Separation", () => {
   let ctx: SeededTestContext;
 
   beforeAll(async () => {

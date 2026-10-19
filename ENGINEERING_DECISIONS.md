@@ -2,6 +2,14 @@
 
 Newtonite is a high-concurrency work-item coordination engine designed to guarantee zero data loss, zero lost updates, and zero phantom notifications during incident surges. When dozens of operators simultaneously triage, claim, edit, approve, and resolve shared operational records, standard web patterns collapse into race conditions, stale overwrites, and state drift. I designed the platform around mathematical invariants enforced at the persistence layer, pairing multi-document ACID transactions with database-level atomic claim primitives, optimistic version locking, a transactional outbox queue, and a pure central authorization policy.
 
+## Executive Summary (Core Decisions at a Glance)
+
+1. **Multi-Document ACID Transactions**: Encapsulates work item state mutations, immutable audit events (`ItemEvent`), and outbox notification jobs in atomic MongoDB replica-set transactions (`tx(session)`), eliminating phantom alerts and orphaned records on failure.
+2. **Atomic Claim & Optimistic Concurrency Control**: Resolves claim races at wire speed via atomic conditional updates (`findOneAndUpdate({ ownerId: null })`) and write contention via `version: expectedVersion` checks, backed by in-browser draft preservation and side-by-side diffing on HTTP 409.
+3. **Transactional Outbox Pattern**: Decouples async notifications into a dedicated background worker with 60s lease locks (`lockedUntil`), idempotent consumer deduplication (`${eventId}:${recipientId}`), exponential retry backoff, and dead-letter queue routing.
+4. **Pure Central Authorization & 404 Existence Hiding**: Enforces resource-level team scoping and strict separation of duties (prohibiting self-approval) via a pure `can(ctx, action, item)` policy, returning HTTP 404 on unauthorized resources to conceal confidential ticket existence.
+5. **Cursor Pagination & Crash-Safe Idempotency**: Employs opaque cursor pagination `[updatedAt, _id]` backed by compound covered indexes to prevent feed drift under concurrent writes, paired with lease-reclaiming idempotency that purges 4xx/5xx errors to allow instant corrected retries.
+
 ```mermaid
 flowchart TD
     Client["React Client (Vite + React Query)"]

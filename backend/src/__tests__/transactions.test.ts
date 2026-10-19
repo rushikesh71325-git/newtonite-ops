@@ -11,7 +11,7 @@ import {
   SeededTestContext,
 } from "./testHelper";
 
-describe("Phase 7: Transactional Invariants & Rollback (Plan Section 11)", () => {
+describe("Phase 7: Transactional Invariants & Rollback", () => {
   let ctx: SeededTestContext;
 
   beforeAll(async () => {

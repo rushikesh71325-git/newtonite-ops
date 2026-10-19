@@ -65,6 +65,5 @@ temp/
 *.pdf
 *.doc
 *.docx
-docs/ASSUMPTIONS.md
 Adapting*.md
 client/README.md

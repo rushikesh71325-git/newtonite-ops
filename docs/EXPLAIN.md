@@ -68,10 +68,10 @@ All queries are strictly tenant-scoped with `workspaceId` as the leading prefix 
           "direction": "forward",
           "indexBounds": {
             "workspaceId": [
-              "[ObjectId('6ad63e4b71bb1c222df08f2a'), ObjectId('6ad63e4b71bb1c222df08f2a')]"
+              "[ObjectId('6ad644d7da0b794f5abc6bff'), ObjectId('6ad644d7da0b794f5abc6bff')]"
             ],
             "teamId": [
-              "[ObjectId('6ad63e4b71bb1c222df08f2c'), ObjectId('6ad63e4b71bb1c222df08f2c')]"
+              "[ObjectId('6ad644d7da0b794f5abc6c01'), ObjectId('6ad644d7da0b794f5abc6c01')]"
             ],
             "state": [
               "[\"OPEN\", \"OPEN\"]"
@@ -90,7 +90,7 @@ All queries are strictly tenant-scoped with `workspaceId` as the leading prefix 
   "executionStats": {
     "executionSuccess": true,
     "nReturned": 10,
-    "executionTimeMillis": 34,
+    "executionTimeMillis": 4,
     "totalKeysExamined": 10,
     "totalDocsExamined": 10
   }

@@ -14,7 +14,7 @@ import {
   SeededTestContext,
 } from "./testHelper";
 
-describe("Phase 7: Concurrency & Idempotency Tests (Plan Section 11)", () => {
+describe("Phase 7: Concurrency & Idempotency Tests", () => {
   let ctx: SeededTestContext;
 
   beforeAll(async () => {

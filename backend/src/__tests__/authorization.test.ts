@@ -12,7 +12,7 @@ import {
   SeededTestContext,
 } from "./testHelper";
 
-describe("Phase 7: Authorization, Resource Scoping & Mass Assignment (Plan Section 11)", () => {
+describe("Phase 7: Authorization, Resource Scoping & Mass Assignment", () => {
   let ctx: SeededTestContext;
 
   beforeAll(async () => {

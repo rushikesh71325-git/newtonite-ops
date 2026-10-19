@@ -20,7 +20,26 @@ The following exact versions have been verified:
 
 ---
 
-## 2. Quick Start
+## 2. Core Operational & Architectural Assumptions
+
+The candidate brief intentionally leaves several product and workflow decisions unspecified. The following core assumptions define the operational boundary of this solution:
+
+- **Single-Workspace Primary Operational Tenancy**: The organization operates within a single primary workspace (`Acme Operations`). Multi-tenancy boundaries (`External Partner Workspace`) serve as isolated security firewalls where cross-tenant queries strictly return HTTP 404 to hide resource existence.
+- **Two-Tier Identity Model**: Workspace roles (`OWNER`, `ADMIN`, `MEMBER`) govern workspace-level governance and administrative overrides, while day-to-day operational scope and queue filtering are dictated by functional team memberships (`TeamMember` records with `LEAD` or `MEMBER` roles).
+- **Separation of Duties on Approvals**: Only designated approvers (`approverId`) or functional team leads can approve an item in `PENDING_APPROVAL`. The item owner and the original requester are strictly forbidden from self-approving (`403 Forbidden`), even if they hold Admin or Owner workspace privileges.
+- **Administrative Deadlock Breaker**: If an assigned approver is on leave or unavailable during an active crisis, Workspace Owners, Admins, or Team Leads can execute an administrative `cancel` action to move the item to `CLOSED`, with a mandatory non-empty reason string logged to the audit trail.
+- **Short Polling Over WebSockets**: The Needs-Attention triage dashboard relies on 20-second background polling rather than stateful WebSockets or Server-Sent Events (SSE). This maintains stateless horizontal scalability and prevents reconnection storms and socket-drain deadlocks during incident surges.
+- **Server-Side Authority with Local Draft Preservation**: The UI avoids speculative optimistic mutations that risk displaying phantom "resolved" states during race conditions. When concurrent writes yield HTTP 409 Conflict, form inputs are retained in React component state, and `<ConflictBanner>` presents a side-by-side diff allowing the operator to reconcile without data loss.
+- **Seed Volume & Scale Benchmark**: Standard seeding (`npm run seed`) loads scenario accounts and items for immediate demonstration. Setting `BULK=true` (`BULK=true npm run seed`) populates 5,000 realistic work items across teams to benchmark compound covered indexes and cursor pagination stability under heavy volume.
+- **Single-Node Replica Set Local Footprint**: Docker Compose initializes MongoDB 7.0 as a single-node replica set (`rs0`) with automated healthcheck initiation (`rs.initiate()`) to unlock multi-document ACID transactions without the operational overhead of a distributed 3-node cluster on local machines.
+- **Sub-Resource Comment Version Decoupling**: Comments append immutable timeline events (`COMMENT_ADDED`) and increment `commentCount` via atomic `$inc`, but deliberately do not bump the parent work item's optimistic `version`. This prevents active investigation drafts from being spuriously invalidated by concurrent commentary.
+- **Crash-Safe Idempotency Leases**: The `Idempotency-Key` middleware enforces 2-minute lease timeouts for `in_progress` requests to recover from unexpected server crashes. Additionally, error responses (HTTP 4xx/5xx) are purged immediately, allowing operators to correct validation errors or resolve conflicts and retry under the same key.
+- **At-Least-Once Asynchronous Delivery**: The Transactional Outbox pattern guarantees at-least-once delivery of notifications across process restarts. Idempotency is enforced downstream at the database level via unique compound indexes (`${eventId}:${recipientId}`).
+- **Immutable Timeline with Soft-Delete Preservation**: Operational items are never hard-deleted; soft-deletion (`deletedAt`) hides them from active operator queues while preserving the full regulatory audit timeline (`ItemEvent`) for administrative review.
+
+---
+
+## 3. Quick Start
 
 Follow these verified steps to launch the entire stack from a clean machine:
 
@@ -86,7 +105,7 @@ Sign in with the seeded Workspace Owner account:
 
 ---
 
-## 3. Manual (Non-Docker) Setup
+## 4. Manual (Non-Docker) Setup
 
 If you prefer to run MongoDB natively without Docker:
 
@@ -128,7 +147,7 @@ If you prefer to run MongoDB natively without Docker:
 
 ---
 
-## 4. Environment Variables
+## 5. Environment Variables
 
 The table below lists all supported environment variables across services:
 
@@ -149,7 +168,7 @@ The table below lists all supported environment variables across services:
 
 ---
 
-## 5. Seeded Demo Accounts
+## 6. Seeded Demo Accounts
 
 The seed script (`npm run seed`) clears collections and establishes two distinct workspaces to demonstrate role hierarchy and tenant isolation:
 - **Primary Workspace**: `Acme Operations` (Contains Customer Operations and Platform Engineering teams)
@@ -169,9 +188,12 @@ All accounts share the exact same password: **`Password123!`**
 
 ---
 
-## 6. Running the Automated Tests
+## 7. Running the Automated Tests
 
 The test suite runs against an isolated in-memory replica set (`MongoMemoryReplSet`), executing real multi-document ACID transactions with genuine `Promise.all` parallel concurrency.
+
+> [!NOTE]
+> **First Test Run & Internet Access Requirement**: The automated test suite uses `mongodb-memory-server` in replica set mode (`MongoMemoryReplSet`). On its initial run, it automatically downloads the official MongoDB binary archive (~100 MB) and caches it locally. Therefore, **the first `npm test` run requires an active internet connection** and may take 30–60 seconds to initiate. Subsequent test runs use the cached binary and execute completely offline.
 
 ### Running All Test Suites:
 ```bash
@@ -201,7 +223,7 @@ npm run explain
 
 ---
 
-## 7. Interactive Demo Walkthrough (7 Critical Behaviors)
+## 8. Interactive Demo Walkthrough (7 Critical Behaviors)
 
 This step-by-step walkthrough demonstrates the core resilience behaviors required under high operational pressure:
 
@@ -290,7 +312,7 @@ This step-by-step walkthrough demonstrates the core resilience behaviors require
 
 ---
 
-## 8. Project Structure
+## 9. Project Structure
 
 ```
 .
@@ -358,12 +380,13 @@ This step-by-step walkthrough demonstrates the core resilience behaviors require
 ├── ENGINEERING_DECISIONS.md    # In-depth architectural trade-off analysis
 ├── KNOWN_LIMITATIONS.md        # Documented operational boundaries and scaling trade-offs
 └── docs/
+    ├── ASSUMPTIONS.md          # Documented architectural and domain assumptions
     └── EXPLAIN.md              # Verbatim query execution plans from explain()
 ```
 
 ---
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 ### Port 8000 or 5173 Already in Use
 If starting the server reports `EADDRINUSE`:
@@ -413,7 +436,9 @@ If notifications are not appearing in the top navigation bar:
 
 ---
 
-## 10. Architectural References
+## 11. Architectural References
 
-- [`ENGINEERING_DECISIONS.md`](./ENGINEERING_DECISIONS.md) - Comprehensive technical justification for the 10 core architectural decisions (Replica Set transactions vs Postgres, optimistic locking vs pessimistic locking, transactional outbox pattern, pure policy function with 404 existence hiding, cursor pagination, and soft delete audit preservation).
+- [`ENGINEERING_DECISIONS.md`](./ENGINEERING_DECISIONS.md) - Comprehensive technical justification for the core architectural decisions (Replica Set transactions vs Postgres, optimistic locking vs pessimistic locking, transactional outbox pattern, pure policy function with 404 existence hiding, cursor pagination, and soft delete audit preservation).
 - [`KNOWN_LIMITATIONS.md`](./KNOWN_LIMITATIONS.md) - Documented operational boundaries, trade-offs, and scaling paths (short polling vs push updates, lease locks vs distributed lock managers, single-node replica set local footprint, and text search tokenization).
+- [`docs/ASSUMPTIONS.md`](./docs/ASSUMPTIONS.md) - Detailed enumeration of domain, identity, concurrency, and infrastructure assumptions.
+- [`docs/EXPLAIN.md`](./docs/EXPLAIN.md) - Verbatim execution plan benchmarks verifying compound covered index scans (`IXSCAN`) and zero in-memory sorting.

@@ -127,7 +127,7 @@ const workItemSchema = new Schema<WorkItemDocument>(
   }
 );
 
-// Indexes defined per Plan Section 8
+// Compound indexes for high-throughput query patterns
 // 1. Team lists filtered by state and cursor pagination
 workItemSchema.index({
   workspaceId: 1,
