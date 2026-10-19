@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+
+# Environment files (secrets must never be committed)
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!*/.env.example
+
+# Build artifacts & compilation caches
+dist/
+*/dist/
+build/
+*/build/
+coverage/
+*/coverage/
+dist-ssr/
+*/dist-ssr/
+*.tsbuildinfo
+.turbo/
+.cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS / System artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# Temporary directories & Docker mounts
+tmp/
+temp/
+.mongodb-data/
+.tempmediaStorage/
+
+# Documents, PDFs & instruction specs
+*.pdf
+*.doc
+*.docx
+docs/ASSUMPTIONS.md
+Adapting*.md
+client/README.md
